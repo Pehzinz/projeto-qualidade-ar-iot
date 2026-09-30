@@ -1,0 +1,354 @@
+[
+    {
+        "id": "f1322c75af267a3b",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1fa7e4561f1ca5b5",
+        "type": "inject",
+        "z": "f1322c75af267a3b",
+        "name": "Simular Sala 101",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"sala\":\"Sala 101\",\"temperatura\":40.5,\"umidade\":45,\"co2\":1500}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 220,
+        "wires": [
+            [
+                "6367a2daa478d549"
+            ]
+        ]
+    },
+    {
+        "id": "6367a2daa478d549",
+        "type": "function",
+        "z": "f1322c75af267a3b",
+        "name": "Logica Sala 101",
+        "func": "// Captura as variáveis do payload\nvar temp = msg.payload.temperatura || 0;\nvar umidade = msg.payload.umidade || 0;\nvar co2 = msg.payload.co2 || 0;\nvar salaTag = (msg.payload.sala || \"Sala_101\").replace(\" \", \"_\");\n\n// Credenciais sem espaços e limpas\nvar botToken = \"8463809598:AAHQIV9G5FfDuvIGo2ghqwmBigYQsnGVN3I\";\nvar chatId = 8806880654;\n\n// 1. Saída InfluxDB (Line Protocol)\nvar msgInflux = {\n    headers: {\n        \"Authorization\": \"Token JN13TvalwfVdMN_VQsTVSiCgNXEuNnyaaGOluWo6rbFx3GpYjRnxpdWFa8pZHVpjt_0aUMoMqVEgRfimylmSww==\",\n        \"Content-Type\": \"text/plain; charset=utf-8\"\n    },\n    payload: 'qualidade_ar,sala=' + salaTag + ' temperatura=' + parseFloat(temp) + ',umidade=' + parseFloat(umidade) + ',co2=' + parseInt(co2)\n};\n\n// 2. Saída Debug\nvar msgDebug = {\n    payload: { sala: salaTag, temperatura: temp, umidade: umidade, co2: co2 }\n};\n\n// 3. Saída Atuador MQTT (ESP32)\nvar statusAlerta = \"NORMAL\";\n// NOVA LÓGICA: Dispara crítico se CO2 > 2000 OU Temperatura >= 50\nif (co2 > 2000 || temp >= 45) {\n    statusAlerta = \"CRITICO\";\n} else if (co2 > 1000 || temp > 30) {\n    statusAlerta = \"ATENCAO\";\n}\n\nvar msgAtuador = { payload: statusAlerta };\n\n// 4. Saída API Telegram\nvar msgTelegram = null;\n\nif (statusAlerta === \"CRITICO\") {\n    // Trocamos os *asteriscos* por <b> para usar HTML e não dar erro com o underline\n    var textoMensagem = \"🚨 <b>ALERTA AMBIENTAL - MACKENZIE</b>\\n\" +\n        \"🎯 <b>ODS 3 - Meta 3.9 (Saúde e Bem-Estar)</b>\\n\\n\" +\n        \"📍 <b>Ambiente:</b> \" + salaTag.replace(\"_\", \" \") + \"\\n\" +\n        \"⚠️ <b>Status:</b> CRÍTICO\\n\" +\n        \"💨 <b>CO2:</b> \" + co2 + \" PPM\\n\" +\n        \"🌡️ <b>Temperatura:</b> \" + temp + \"°C\\n\" +\n        \"💧 <b>Umidade:</b> \" + umidade + \"%\\n\\n\" +\n        \"⚙️ <b>Ação:</b> Exaustores e atuadores de emergência acionados via IoT.\";\n\n    msgTelegram = {\n        url: \"https://api.telegram.org/bot\" + botToken + \"/sendMessage\",\n        headers: {\n            \"Content-Type\": \"application/json\"\n        },\n        payload: {\n            chat_id: chatId,\n            text: textoMensagem,\n            parse_mode: \"HTML\" // Mudamos para HTML para evitar conflitos\n        }\n    };\n}\n\n// Retorna as 4 saídas\nreturn [msgInflux, msgDebug, msgAtuador, msgTelegram];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 220,
+        "wires": [
+            [
+                "46a10fd55d25def0"
+            ],
+            [
+                "e2982ef0b81478fe"
+            ],
+            [
+                "1c95e27d3cebb03c"
+            ],
+            [
+                "b601f2e9a747614d"
+            ]
+        ]
+    },
+    {
+        "id": "e2982ef0b81478fe",
+        "type": "debug",
+        "z": "f1322c75af267a3b",
+        "name": "debug 101",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "417ddbe8ac76d6d3",
+        "type": "inject",
+        "z": "f1322c75af267a3b",
+        "name": "Simular Sala 202",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"sala\":\"Sala 202\",\"temperatura\":24,\"umidade\":35,\"co2\":2359}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 320,
+        "wires": [
+            [
+                "4f49b1fc228c281e"
+            ]
+        ]
+    },
+    {
+        "id": "4f49b1fc228c281e",
+        "type": "function",
+        "z": "f1322c75af267a3b",
+        "name": "Logica Sala 202",
+        "func": "// Captura as variáveis do payload\nvar temp = msg.payload.temperatura || 0;\nvar umidade = msg.payload.umidade || 0;\nvar co2 = msg.payload.co2 || 0;\nvar salaTag = (msg.payload.sala || \"Sala_202\").replace(\" \", \"_\");\n\n// Credenciais sem espaços e limpas\nvar botToken = \"8463809598:AAHQIV9G5FfDuvIGo2ghqwmBigYQsnGVN3I\";\nvar chatId = 8806880654;\n\n// 1. Saída InfluxDB (Line Protocol)\nvar msgInflux = {\n    headers: {\n        \"Authorization\": \"Token JN13TvalwfVdMN_VQsTVSiCgNXEuNnyaaGOluWo6rbFx3GpYjRnxpdWFa8pZHVpjt_0aUMoMqVEgRfimylmSww==\",\n        \"Content-Type\": \"text/plain; charset=utf-8\"\n    },\n    payload: 'qualidade_ar,sala=' + salaTag + ' temperatura=' + parseFloat(temp) + ',umidade=' + parseFloat(umidade) + ',co2=' + parseInt(co2)\n};\n\n// 2. Saída Debug\nvar msgDebug = {\n    payload: { sala: salaTag, temperatura: temp, umidade: umidade, co2: co2 }\n};\n\n// 3. Saída Atuador MQTT (ESP32)\nvar statusAlerta = \"NORMAL\";\n// NOVA LÓGICA: Dispara crítico se CO2 > 2000 OU Temperatura >= 50\nif (co2 > 2000 || temp >= 45) {\n    statusAlerta = \"CRITICO\";\n} else if (co2 > 1000 || temp > 30) {\n    statusAlerta = \"ATENCAO\";\n}\n\nvar msgAtuador = { payload: statusAlerta };\n\n// 4. Saída API Telegram\nvar msgTelegram = null;\n\nif (statusAlerta === \"CRITICO\") {\n    // Trocamos os *asteriscos* por <b> para usar HTML e não dar erro com o underline\n    var textoMensagem = \"🚨 <b>ALERTA AMBIENTAL - MACKENZIE</b>\\n\" +\n        \"🎯 <b>ODS 3 - Meta 3.9 (Saúde e Bem-Estar)</b>\\n\\n\" +\n        \"📍 <b>Ambiente:</b> \" + salaTag.replace(\"_\", \" \") + \"\\n\" +\n        \"⚠️ <b>Status:</b> CRÍTICO\\n\" +\n        \"💨 <b>CO2:</b> \" + co2 + \" PPM\\n\" +\n        \"🌡️ <b>Temperatura:</b> \" + temp + \"°C\\n\" +\n        \"💧 <b>Umidade:</b> \" + umidade + \"%\\n\\n\" +\n        \"⚙️ <b>Ação:</b> Exaustores e atuadores de emergência acionados via IoT.\";\n\n    msgTelegram = {\n        url: \"https://api.telegram.org/bot\" + botToken + \"/sendMessage\",\n        headers: {\n            \"Content-Type\": \"application/json\"\n        },\n        payload: {\n            chat_id: chatId,\n            text: textoMensagem,\n            parse_mode: \"HTML\" // Mudamos para HTML para evitar conflitos\n        }\n    };\n}\n\n// Retorna as 4 saídas\nreturn [msgInflux, msgDebug, msgAtuador, msgTelegram];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 320,
+        "wires": [
+            [
+                "46a10fd55d25def0"
+            ],
+            [
+                "b997caabe295d7cc"
+            ],
+            [
+                "0c3beed29bace9a4"
+            ],
+            [
+                "0d1fe39e24c1ed60"
+            ]
+        ]
+    },
+    {
+        "id": "b997caabe295d7cc",
+        "type": "debug",
+        "z": "f1322c75af267a3b",
+        "name": "debug 202",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "46a10fd55d25def0",
+        "type": "http request",
+        "z": "f1322c75af267a3b",
+        "name": "Enviar ao InfluxDB",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://us-east-1-1.aws.cloud2.influxdata.com/api/v2/write?org=mackenzie_v2&bucket=escola_iot_v2&precision=s",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 730,
+        "y": 260,
+        "wires": [
+            [
+                "7d2b42e5e1feb284"
+            ]
+        ]
+    },
+    {
+        "id": "7fde70b08f615a04",
+        "type": "mqtt in",
+        "z": "f1322c75af267a3b",
+        "name": "Sala 101 - Dados",
+        "topic": "escola/sala101/dados",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "d71dc627a39d28b0",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 120,
+        "wires": [
+            [
+                "6367a2daa478d549"
+            ]
+        ]
+    },
+    {
+        "id": "d6ce6952142bc18d",
+        "type": "mqtt in",
+        "z": "f1322c75af267a3b",
+        "name": "Sala 202 - Dados",
+        "topic": "escola/sala202/dados",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "d71dc627a39d28b0",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 420,
+        "wires": [
+            [
+                "4f49b1fc228c281e"
+            ]
+        ]
+    },
+    {
+        "id": "1c95e27d3cebb03c",
+        "type": "mqtt out",
+        "z": "f1322c75af267a3b",
+        "name": "Atuador Sala 101",
+        "topic": "escola/sala101/atuador",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "d71dc627a39d28b0",
+        "x": 690,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "0c3beed29bace9a4",
+        "type": "mqtt out",
+        "z": "f1322c75af267a3b",
+        "name": "Atuador Sala 202",
+        "topic": "escola/sala202/atuador",
+        "qos": "0",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "d71dc627a39d28b0",
+        "x": 710,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "b601f2e9a747614d",
+        "type": "http request",
+        "z": "f1322c75af267a3b",
+        "name": "API Telegram ",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 690,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0d1fe39e24c1ed60",
+        "type": "http request",
+        "z": "f1322c75af267a3b",
+        "name": "API Telegram ",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 710,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7d2b42e5e1feb284",
+        "type": "debug",
+        "z": "f1322c75af267a3b",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "d71dc627a39d28b0",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
